@@ -1,6 +1,7 @@
 ﻿using LineMessagingAPISDK;
 using LineMessagingAPISDK.Models;
 using Newtonsoft.Json;
+using PokeUtils.Models;
 using System;
 using System.Collections.Generic;
 using System.Configuration;
@@ -10,6 +11,7 @@ using System.Net.Http;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
+using System.Web;
 using System.Web.Http;
 
 namespace PokeUtils.Controllers
@@ -57,7 +59,7 @@ namespace PokeUtils.Controllers
                         switch (message.Type)
                         {
                             case MessageType.Text:
-                                await handler.HandleTextMessage();
+                                await handler.HandleTextMessage(MessageHandler.Current);
                                 break;
                             case MessageType.Audio:
                             case MessageType.Image:
@@ -136,53 +138,13 @@ namespace PokeUtils.Controllers
             return await lineClient.GetProfile(mid);
         }
 
-        public async Task HandleTextMessage()
+        public async Task HandleTextMessage(MessageHandler handler)
         {
             var textMessage = JsonConvert.DeserializeObject<TextMessage>(lineEvent.Message.ToString());
-            Message replyMessage = null;
-            if (textMessage.Text.ToLower() == "buttons")
-            {
-                List<TemplateAction> actions = new List<TemplateAction>();
-                actions.Add(new MessageTemplateAction("Message Label", "sample data"));
-                actions.Add(new PostbackTemplateAction("Postback Label", "sample data"));
-                actions.Add(new UriTemplateAction("Uri Label", "https://github.com/kenakamu"));
-                ButtonsTemplate buttonsTemplate = new ButtonsTemplate("https://github.com/apple-touch-icon.png", "Sample Title", "Sample Text", actions);
 
-                replyMessage = new TemplateMessage("Buttons", buttonsTemplate);
-            }
-            else if (textMessage.Text.ToLower() == "confirm")
-            {
-                List<TemplateAction> actions = new List<TemplateAction>();
-                actions.Add(new MessageTemplateAction("Yes", "yes"));
-                actions.Add(new MessageTemplateAction("No", "no"));
-                ConfirmTemplate confirmTemplate = new ConfirmTemplate("Confirm Test", actions);
-                replyMessage = new TemplateMessage("Confirm", confirmTemplate);
-            }
-            else if (textMessage.Text.ToLower() == "carousel")
-            {
-                List<TemplateColumn> columns = new List<TemplateColumn>();
-                List<TemplateAction> actions = new List<TemplateAction>();
-                actions.Add(new MessageTemplateAction("Message Label", "sample data"));
-                actions.Add(new PostbackTemplateAction("Postback Label", "sample data"));
-                actions.Add(new UriTemplateAction("Uri Label", "https://github.com/kenakamu"));
-                columns.Add(new TemplateColumn() { Title = "Casousel 1 Title", Text = "Casousel 1 Text", ThumbnailImageUrl = "https://github.com/apple-touch-icon.png", Actions = actions });
-                columns.Add(new TemplateColumn() { Title = "Casousel 2 Title", Text = "Casousel 2 Text", ThumbnailImageUrl = "https://github.com/apple-touch-icon.png", Actions = actions });
-                CarouselTemplate carouselTemplate = new CarouselTemplate(columns);
-                replyMessage = new TemplateMessage("Carousel", carouselTemplate);
-            }
-            else
-            {
-                var intValue = 0;
-                if (int.TryParse(textMessage.Text, out intValue))
-                {
-                    var personarity = (Personarities)(intValue % 25);
-                    replyMessage = new TextMessage($"{personarity.PersonarityToString()} なメタモンだね。");
-                } else
-                {
-                    replyMessage = new TextMessage(null);
-                }
-            }
-            await Reply(replyMessage);
+            var reply = handler.HandleTextMessage(lineEvent.Source.UserId + lineEvent.Source.GroupId, textMessage);
+
+            await Reply(new TextMessage(reply));
         }
 
 
@@ -239,103 +201,4 @@ namespace PokeUtils.Controllers
         }
     }
 
-    public enum Personarities
-    {
-        Ganbaruya = 0,
-        Samisigari,
-        Yuukan,
-        Ijippari,
-        Yancha,
-        Zubutoi,
-        Sunao,
-        Nonki,
-        Wanpaku,
-        Noutenki,
-        Okubyou,
-        Sekkachi,
-        Majime,
-        Youki,
-        Mujaki,
-        Hikaeme,
-        Ottori,
-        Reisei,
-        Tereya,
-        Ukkariya,
-        Odayaka,
-        Otonashii,
-        Namaiki,
-        Shincho,
-        Kimagure = 24,
-        Unknown,
-    }
-
-    public static class PersonalityUtils
-    {
-        public static Personarities GetPersonarityFromString(string str)
-        {
-            switch (str)
-            {
-                case "がんばりや": return Personarities.Ganbaruya;
-                case "さみしがり": return Personarities.Samisigari;
-                case "ゆうかん": return Personarities.Yuukan;
-                case "いじっぱり": return Personarities.Ijippari;
-                case "やんちゃ": return Personarities.Yancha;
-                case "ずぶとい": return Personarities.Zubutoi;
-                case "すなお": return Personarities.Sunao;
-                case "のんき": return Personarities.Nonki;
-                case "わんぱく": return Personarities.Wanpaku;
-                case "のうてんき": return Personarities.Noutenki;
-                case "おくびょう": return Personarities.Okubyou;
-                case "せっかち": return Personarities.Sekkachi;
-                case "まじめ": return Personarities.Majime;
-                case "ようき": return Personarities.Youki;
-                case "むじゃき": return Personarities.Mujaki;
-                case "ひかえめ": return Personarities.Hikaeme;
-                case "おっとり": return Personarities.Ottori;
-                case "れいせい": return Personarities.Reisei;
-                case "てれや": return Personarities.Tereya;
-                case "うっかりや": return Personarities.Ukkariya;
-                case "おだやか": return Personarities.Odayaka;
-                case "おとなしい": return Personarities.Otonashii;
-                case "なまいき": return Personarities.Namaiki;
-                case "しんちょう": return Personarities.Shincho;
-                case "きまぐれ": return Personarities.Kimagure;
-                default:
-                    return Personarities.Unknown;
-            }
-        }
-        public static string PersonarityToString(this Personarities self)
-        {
-            switch (self)
-            {
-                case Personarities.Ganbaruya: return "がんばりや";
-                case Personarities.Hikaeme: return "ひかえめ";
-                case Personarities.Ijippari: return "いじっぱり";
-                case Personarities.Kimagure: return "きまぐれ";
-                case Personarities.Majime: return "まじめ";
-                case Personarities.Mujaki: return "むじゃき";
-                case Personarities.Namaiki: return "なまいき";
-                case Personarities.Nonki: return "のんき";
-                case Personarities.Noutenki: return "のうてんき";
-                case Personarities.Odayaka: return "おだやか";
-                case Personarities.Okubyou: return "おくびょう";
-                case Personarities.Otonashii: return "おとなしい";
-                case Personarities.Ottori: return "おっとり";
-                case Personarities.Reisei: return "れいせい";
-                case Personarities.Samisigari: return "さみしがり";
-                case Personarities.Sekkachi: return "せっかち";
-                case Personarities.Shincho: return "しんちょう";
-                case Personarities.Sunao: return "すなお";
-                case Personarities.Tereya: return "てれや";
-                case Personarities.Ukkariya: return "うっかりや";
-                case Personarities.Wanpaku: return "わんぱく";
-                case Personarities.Yancha: return "やんちゃ";
-                case Personarities.Youki: return "ようき";
-                case Personarities.Yuukan: return "ゆうかん";
-                case Personarities.Zubutoi: return "ずぶとい";
-                case Personarities.Unknown:
-                default: return "ふめい";
-            }
-        }
-    }
 }
