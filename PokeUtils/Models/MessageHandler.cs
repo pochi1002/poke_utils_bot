@@ -23,6 +23,10 @@ namespace PokeUtils.Models
                 this.ContextManager.ForgetAll();
                 return "おやすみなさい...";
             }
+            if(msg.Text == "dice")
+            {
+                return new Random(DateTime.Now.Second).Next(1, 6).ToString();
+            }
 
             return this.ContextManager.GetContextOf(userID).GetReplyMessage(msg.Text);
         }
