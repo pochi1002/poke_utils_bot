@@ -23,10 +23,19 @@ namespace PokeUtils.Models
                 this.ContextManager.ForgetAll();
                 return "おやすみなさい...";
             }
-            if(msg.Text == "dice")
+            if(msg.Text == "@dice")
             {
-                return new Random(DateTime.Now.Second).Next(1, 6).ToString();
+                return new Random(DateTime.Now.Second).Next(0, 100).ToString();
             }
+            if (msg.Text == "@dice99")
+            {
+                return "99";
+            }
+            if (msg.Text == "もりた")
+            {
+                return "(笑)";
+            }
+
 
             return this.ContextManager.GetContextOf(userID).GetReplyMessage(msg.Text);
         }

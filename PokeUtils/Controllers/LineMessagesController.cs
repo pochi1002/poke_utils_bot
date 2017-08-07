@@ -172,9 +172,9 @@ namespace PokeUtils.Controllers
         public async Task HandleStickerMessage()
         {
             //https://devdocs.line.me/files/sticker_list.pdf
-            var stickerMessage = JsonConvert.DeserializeObject<StickerMessage>(lineEvent.Message.ToString());
-            var replyMessage = new StickerMessage("1", "1");
-            await Reply(replyMessage);
+            //var stickerMessage = JsonConvert.DeserializeObject<StickerMessage>(lineEvent.Message.ToString());
+            //var replyMessage = new StickerMessage("1", "1");
+            //await Reply(replyMessage);
         }
 
         public async Task HandleLocationMessage()
