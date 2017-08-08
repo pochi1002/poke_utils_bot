@@ -10,6 +10,7 @@ namespace PokeUtils.Models
     {
         public static MessageHandler Current { get; } = new MessageHandler();
         ContextManager ContextManager { get; } = new ContextManager();
+        public static string MoritaID { get; } = "C2bd1a6e22bb47a6b0cda7bf759519113";
 
         public string HandleTextMessage(string userID, TextMessage msg)
         {
@@ -35,7 +36,13 @@ namespace PokeUtils.Models
             {
                 return "(笑)";
             }
-
+            if(userID == MoritaID)
+            {
+                if(new Random(DateTime.Now.Second).Next(0, 100) > 70)
+                {
+                    return "はいはいもりたもりた";
+                }
+            }
 
             return this.ContextManager.GetContextOf(userID).GetReplyMessage(msg.Text);
         }
